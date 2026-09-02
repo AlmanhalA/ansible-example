@@ -1,0 +1,48 @@
+---
+- name: Deploy Hello World Application
+  hosts: localhost
+  connection: local
+  
+  tasks:
+    - name: Create Hello World Deployment
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: hello-world
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: hello-world
+            template:
+              metadata:
+                labels:
+                  app: hello-world
+              spec:
+                containers:
+                  - name: hello-world
+                    image: gcr.io/google-samples/hello-app:1.0
+                    ports:
+                      - containerPort: 8080
+
+    - name: Create NodePort Service
+      kubernetes.core.k8s:
+        state: present
+        namespace: default
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: hello-world-service
+          spec:
+            type: NodePort
+            selector:
+              app: hello-world
+            ports:
+              - port: 80
+                targetPort: 8080
+                nodePort: 30080
