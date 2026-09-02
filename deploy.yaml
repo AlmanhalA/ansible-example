@@ -23,7 +23,7 @@
           metadata:
             name: hello-world
           spec:
-            replicas: "{{ pod_count | default(5) | int }}"
+            replicas: "{{ pod_count }}"
             selector:
               matchLabels:
                 app: hello-world
