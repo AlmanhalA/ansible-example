@@ -22,8 +22,8 @@
           kind: Deployment
           metadata:
             name: hello-world
-          spec:
-            replicas: "{{ pod_count | default(5) }}"
+            spec:
+            replicas: "{{ pod_count | default(5) | int }}"
             selector:
               matchLabels:
                 app: hello-world
