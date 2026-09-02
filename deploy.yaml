@@ -4,17 +4,26 @@
   connection: local
   
   tasks:
-    - name: Create Hello World Deployment
+    - name: Manage Kubernetes Namespace
       kubernetes.core.k8s:
-        state: present
-        namespace: default
+        state: "{{ cluster_state | default('present') }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ target_namespace | default('default') }}"
+            
+    - name: Manage Hello World Deployment
+      kubernetes.core.k8s:
+        state: "{{ cluster_state | default('present') }}"
+        namespace: "{{ target_namespace | default('default') }}"
         definition:
           apiVersion: apps/v1
           kind: Deployment
           metadata:
             name: hello-world
           spec:
-            replicas: 2
+            replicas: "{{ pod_count | default(5) }}"
             selector:
               matchLabels:
                 app: hello-world
@@ -25,14 +34,13 @@
               spec:
                 containers:
                   - name: hello-world
-                    image: gcr.io/google-samples/hello-app:1.0
-                    ports:
-                      - containerPort: 8080
-
+                    image: "{{ image_name | default('nginx') }}"
+                    ports: "{{ [ {'containerPort': app_port | default(80) | int} ] }}"
+                    
     - name: Create NodePort Service
       kubernetes.core.k8s:
-        state: present
-        namespace: default
+        state: "{{ cluster_state | default('present') }}"
+        namespace: "{{ target_namespace | default('default') }}"
         definition:
           apiVersion: v1
           kind: Service
@@ -42,7 +50,4 @@
             type: NodePort
             selector:
               app: hello-world
-            ports:
-              - port: 80
-                targetPort: 8080
-                nodePort: 30080
+            ports: "{{ [ {'port': 80, 'targetPort': app_port | default(80) | int} ] }}"
